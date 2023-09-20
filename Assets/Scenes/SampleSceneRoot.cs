@@ -26,36 +26,43 @@ public class SampleSceneRoot : MonoBehaviour
             description: "すべての通知を受信します。",
             Importance.Default);
         AndroidNotificationCenter.RegisterNotificationChannel(channel);
+#endif
 
         notifyButton.onClick.AddListener(() =>
         {
-            var notification = new AndroidNotification()
-            {
-                Title = "通知タイトル",
-                Text = "通知本文",
-                FireTime = DateTimeOffset.Now.DateTime + TimeSpan.FromSeconds(10.0),
-            };
-            AndroidNotificationCenter.SendNotification(notification, AndroidChannelId);
+            ScheduleNotification(
+                title: "通知タイトル",
+                body: "通知本文",
+                fireTime: DateTimeOffset.Now.DateTime + TimeSpan.FromSeconds(10.0));
         });
+    }
+
+    void ScheduleNotification(string title, string body, DateTimeOffset fireTime)
+    {
+#if !UNITY_EDITOR && UNITY_ANDROID
+        var notification = new AndroidNotification()
+        {
+            Title = title,
+            Text = body,
+            FireTime = fireTime.DateTime,
+        };
+        AndroidNotificationCenter.SendNotification(notification, AndroidChannelId);
 #endif
 
 #if !UNITY_EDITOR && UNITY_IOS
-        notifyButton.onClick.AddListener(() =>
+        var trigger = new iOSNotificationTimeIntervalTrigger()
         {
-            var trigger = new iOSNotificationTimeIntervalTrigger()
-            {
-                TimeInterval = TimeSpan.FromSeconds(10.0),
-                Repeats = false,
-            };
+            TimeInterval = fireTime - DateTimeOffset.Now.DateTime,
+            Repeats = false,
+        };
 
-            var notification = new iOSNotification()
-            {
-                Title = "通知タイトル",
-                Body = "通知本文",
-                Trigger = trigger,
-            };
-            iOSNotificationCenter.ScheduleNotification(notification);
-        });
+        var notification = new iOSNotification()
+        {
+            Title = title,
+            Body = body,
+            Trigger = trigger,
+        };
+        iOSNotificationCenter.ScheduleNotification(notification);
 #endif
     }
 
