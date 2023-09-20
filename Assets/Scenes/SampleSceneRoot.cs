@@ -1,7 +1,14 @@
 using System;
-using Unity.Notifications.Android;
 using UnityEngine;
 using UnityEngine.UI;
+
+#if !UNITY_EDITOR && UNITY_ANDROID
+using Unity.Notifications.Android;
+#endif
+
+#if !UNITY_EDITOR && UNITY_IOS
+using Unity.Notifications.iOS;
+#endif
 
 public class SampleSceneRoot : MonoBehaviour
 {
@@ -29,6 +36,25 @@ public class SampleSceneRoot : MonoBehaviour
                 FireTime = DateTimeOffset.Now.DateTime + TimeSpan.FromSeconds(10.0),
             };
             AndroidNotificationCenter.SendNotification(notification, AndroidChannelId);
+        });
+#endif
+
+#if !UNITY_EDITOR && UNITY_IOS
+        notifyButton.onClick.AddListener(() =>
+        {
+            var trigger = new iOSNotificationTimeIntervalTrigger()
+            {
+                TimeInterval = TimeSpan.FromSeconds(10.0),
+                Repeats = false,
+            };
+
+            var notification = new iOSNotification()
+            {
+                Title = "通知タイトル",
+                Body = "通知本文",
+                Trigger = trigger,
+            };
+            iOSNotificationCenter.ScheduleNotification(notification);
         });
 #endif
     }
